@@ -1,24 +1,103 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import "./App.css";
+import SingleCard from "./components/SingleCard";
+
+const cardImages = [
+  { src: "/img/barca-1.png",matched:false },
+  { src: "/img/bayern-1.png",matched:false },
+  { src: "/img/chelsea-1.png",matched:false},
+  { src: "/img/psg-1.png",matched:false },
+  { src: "/img/manu-1.png",matched:false},
+  { src: "/img/city-1.png",matched:false},
+];
 
 function App() {
+
+  const [cards,setCards]=useState([])
+  const [turns,setTurns]=useState(0)
+  const [choiceOne,setChoiceOne]=useState(null)
+  const [choiceTwo,setChoiceTwo]=useState(null)
+  const [disabled,setDisabled]=useState(false)
+
+  const shuffleCards = () => {
+    const shuffleCards = [...cardImages, ...cardImages]
+      .sort(() => Math.random() - 0.5)
+      .map((card) => ({ ...card, id: Math.random() }));
+
+      setChoiceOne(null)
+      setChoiceTwo(null)
+      setCards(shuffleCards);
+      setTurns(0);
+  };
+
+  // handle choice;
+
+  const handleChoice=(card)=>{
+    choiceOne ? setChoiceTwo(card):setChoiceOne(card)
+    //console.log(choiceOne,choiceTwo);
+  }
+
+  //compare 2 selected cards
+
+  useEffect(()=>{
+
+    if(choiceOne && choiceTwo){
+      setDisabled(true)
+      if(choiceOne.src===choiceTwo.src){
+        setCards(prevCards=>{
+          return prevCards.map(card=>{
+            if(card.src===choiceOne.src){
+              return {...card,matched:true}
+            } else{
+              return card
+            }
+          })
+        })
+        resetTurn()
+      }else{
+        setTimeout(()=>resetTurn(),1000) 
+      }
+    }
+  },[choiceOne,choiceTwo])
+
+
+   //console.log(cards);
+  //reset turn and increase turn
+
+  const resetTurn=()=>{
+    setChoiceOne(null)
+    setChoiceTwo(null)
+    setTurns(prevTurns=>prevTurns+1)
+    setDisabled(false)
+  }
+
+
+  //start game automatically
+
+  useEffect(()=>{
+    shuffleCards()
+  },[])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+  <div className="App">
+    <h1>Memory Game</h1>
+    <button onClick={shuffleCards}>New Game</button>
+
+    <div className="card-grid">
+      {cards.map((card)=>(
+        <SingleCard 
+        card={card} 
+        key={card.id}
+        handleChoice={handleChoice}
+        flipped={card===choiceOne || card===choiceTwo || card.matched}
+        disabled={disabled}
         >
-          Learn React
-        </a>
-      </header>
+
+        </SingleCard>
+      ))}
     </div>
+    <p> Turns :{turns}</p>
+  </div>
   );
 }
 
